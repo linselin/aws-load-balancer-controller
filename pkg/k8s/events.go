@@ -2,14 +2,15 @@ package k8s
 
 const (
 	// Ingress events
-	IngressEventReasonConflictingIngressClass = "ConflictingIngressClass"
-	IngressEventReasonFailedLoadGroupID       = "FailedLoadGroupID"
-	IngressEventReasonFailedAddFinalizer      = "FailedAddFinalizer"
-	IngressEventReasonFailedRemoveFinalizer   = "FailedRemoveFinalizer"
-	IngressEventReasonFailedUpdateStatus      = "FailedUpdateStatus"
-	IngressEventReasonFailedBuildModel        = "FailedBuildModel"
-	IngressEventReasonFailedDeployModel       = "FailedDeployModel"
-	IngressEventReasonSuccessfullyReconciled  = "SuccessfullyReconciled"
+	IngressEventReasonConflictingIngressClass        = "ConflictingIngressClass"
+	IngressEventReasonFailedLoadGroupID              = "FailedLoadGroupID"
+	IngressEventReasonFailedAddFinalizer             = "FailedAddFinalizer"
+	IngressEventReasonFailedRemoveFinalizer          = "FailedRemoveFinalizer"
+	IngressEventReasonFailedUpdateStatus             = "FailedUpdateStatus"
+	IngressEventReasonFailedBuildModel               = "FailedBuildModel"
+	IngressEventReasonFailedDeployModel              = "FailedDeployModel"
+	IngressEventReasonSuccessfullyReconciled         = "SuccessfullyReconciled"
+	IngressEventReasonCrossAccountZonesNotApplicable = "CrossAccountZonesNotApplicable"
 
 	// Service events
 	ServiceEventReasonFailedAddFinalizer     = "FailedAddFinalizer"

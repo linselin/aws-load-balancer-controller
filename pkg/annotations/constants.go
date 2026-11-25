@@ -81,6 +81,7 @@ const (
 	IngressSuffixUseRegexPathMatch                             = "use-regex-path-match"
 	IngressSuffixTargetControlPort                             = "target-control-port"
 	IngressSuffixCreateCertificate                             = "create-acm-cert"
+	IngressSuffixCreateCertificateUseCrossAccountZones         = "create-acm-cert-use-cross-account-zones"
 	IngressSuffixACMCaARN                                      = "acm-pca-arn"
 	IngressSuffixDryRunPlan                                    = "dry-run-plan"
 

@@ -81,6 +81,11 @@ type CertificateSpec struct {
 	// Not needed for private certificates
 	ValidationMethod acmtypes.ValidationMethod `json:"validationMethod"`
 
+	// Whether DNS validation records may be written in hosted zones of other accounts.
+	// Only set for AMAZON_ISSUED certificates.
+	// +optional
+	CrossAccount bool `json:"crossAccount,omitempty"`
+
 	// Key algorithm for the key pair
 	// currently not used nor set in the model
 	// +optional

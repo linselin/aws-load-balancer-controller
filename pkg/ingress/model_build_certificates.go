@@ -7,9 +7,11 @@ import (
 	"strings"
 
 	acmtypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/aws-load-balancer-controller/v3/pkg/algorithm"
 	"sigs.k8s.io/aws-load-balancer-controller/v3/pkg/annotations"
+	"sigs.k8s.io/aws-load-balancer-controller/v3/pkg/k8s"
 	acmModel "sigs.k8s.io/aws-load-balancer-controller/v3/pkg/model/acm"
 )
 
@@ -18,6 +20,10 @@ func (t *defaultModelBuildTask) buildACMCertificates(ctx context.Context, ing *C
 	var explicitCertARNs []string
 	_ = t.annotationParser.ParseStringSliceAnnotation(annotations.IngressSuffixCertificateARN, &explicitCertARNs, ing.Ing.Annotations)
 	if len(explicitCertARNs) > 0 {
+		if t.buildCertificateUseCrossAccountZones(ing) {
+			t.eventRecorder.Event(ing.Ing, corev1.EventTypeWarning, k8s.IngressEventReasonCrossAccountZonesNotApplicable,
+				fmt.Sprintf("%s is ignored because %s is set", annotations.IngressSuffixCreateCertificateUseCrossAccountZones, annotations.IngressSuffixCertificateARN))
+		}
 		return nil, nil
 	}
 
@@ -69,6 +75,14 @@ func (t *defaultModelBuildTask) buildCertificateSpec(ctx context.Context, ing *C
 		certType = acmtypes.CertificateTypeAmazonIssued
 	}
 
+	// cross-account DNS validation only applies to AMAZON_ISSUED certificates
+	crossAccount := t.buildCertificateUseCrossAccountZones(ing)
+	if crossAccount && certType != acmtypes.CertificateTypeAmazonIssued {
+		t.eventRecorder.Event(ing.Ing, corev1.EventTypeWarning, k8s.IngressEventReasonCrossAccountZonesNotApplicable,
+			fmt.Sprintf("%s is ignored for private certificates (%s or controller default CA is set)", annotations.IngressSuffixCreateCertificateUseCrossAccountZones, annotations.IngressSuffixACMCaARN))
+		crossAccount = false
+	}
+
 	return &acmModel.CertificateSpec{
 		Type:                    certType,
 		CertificateAuthorityARN: caArn,
@@ -76,7 +90,16 @@ func (t *defaultModelBuildTask) buildCertificateSpec(ctx context.Context, ing *C
 		SubjectAlternativeNames: hosts,
 		ValidationMethod:        acmtypes.ValidationMethodDns, // currently we only support DNS based validation for AMAZON_ISSUED certificates
 		Tags:                    tags,
+		CrossAccount:            crossAccount,
 	}, nil
+}
+
+// buildCertificateUseCrossAccountZones reports whether the ingress opted in to cross-account DNS validation.
+// An unset or unparsable value means false.
+func (t *defaultModelBuildTask) buildCertificateUseCrossAccountZones(ing *ClassifiedIngress) bool {
+	var useCrossAccountZones bool
+	_, _ = t.annotationParser.ParseBoolAnnotation(annotations.IngressSuffixCreateCertificateUseCrossAccountZones, &useCrossAccountZones, ing.Ing.Annotations)
+	return useCrossAccountZones
 }
 
 func (t *defaultModelBuildTask) buildCertificateHosts(_ context.Context, ing *ClassifiedIngress) []string {
